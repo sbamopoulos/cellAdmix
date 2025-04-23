@@ -1,0 +1,41 @@
+Package: cellAdmix
+Title: cellAdmix
+Version: 0.1.0
+Authors@R:
+    c(
+        person("Jonathan", "Mitchel", , "mitchel@mit.edu", role = c("aut", "cre")),
+        person("Viktor", "Petukhov", , "viktor.petukhov+gh@pm.me", role = c("aut")),
+        person("Teng", "Gao", , "tgao@broadinstitute.org", role = c("aut")),
+        person("Peter", "Kharchenko", , "pkharchenko@altoslabs.com", role = c("aut"))
+    )
+Description: Evaluating and correcting cell admixtures in imaging-based spatial transcriptomics data
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Depends:
+    R (>= 4.1.0),
+    NMF
+Imports:
+    cowplot,
+    CRF,
+    data.table,
+    dplyr,
+    FNN,
+    ggplot2,
+    ggrastr,
+    ggrepel,
+    ggridges,
+    igraph,
+    Matrix,
+    NMF,
+    nnls,
+    parallel,
+    RColorBrewer,
+    sccore,
+    Seurat,
+    stringr,
+    tibble,
+    reshape2,
+    gtools
+LazyData: true
