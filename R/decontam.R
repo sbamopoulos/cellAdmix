@@ -67,7 +67,7 @@ get_knn_counts_all <- function(df, h, include_i=FALSE, n.cores=1) {
       counts <- knn_count_matrix(df_cell, include_i=include_i, k=h)
       counts <- df_cell %>%
         dplyr::select(cell, id = mol_id, gene_i = gene) %>%
-        cbind.data.frame(counts)
+        cbind.data.frame(as.data.frame(as.matrix(counts)))
       counts
     }, mc.cores = n.cores) %>%
     bind_rows()
