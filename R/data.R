@@ -8,7 +8,7 @@
 #'   \item{y}{cell centroid y location}
 #'   \item{cell}{cell ID}
 #'   \item{celltype}{cell type}
-#'   \item{cell_type_coarse}{optional secondary cell type annotation}
+#'   \item{celltype_coarse}{optional secondary cell type annotation}
 #'   \item{niche}{optional tissue region annotation}
 #' }
 #' @source Generated using 'data-raw/data_prep_vignette.R'

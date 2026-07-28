@@ -26,7 +26,6 @@ get_counts_meta_seurat <- function(tx.dat, normalize=FALSE) {
     unique() %>%
     as.data.frame()
 
-  colnames(meta)[2] <- 'cell_type'
   rownames(meta) <- meta$cell
   meta <- meta[colnames(cm),]
 

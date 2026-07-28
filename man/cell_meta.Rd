@@ -13,7 +13,7 @@ A data frame with 412 rows and 6 variables:
 \item{y}{cell centroid y location}
 \item{cell}{cell ID}
 \item{celltype}{cell type}
-\item{cell_type_coarse}{optional secondary cell type annotation}
+\item{celltype_coarse}{optional secondary cell type annotation}
 \item{niche}{optional tissue region annotation}
 }
 }
