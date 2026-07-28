@@ -1,7 +1,74 @@
 ### ME Admixture Scoring
 
+#' Collapse transcript coordinates to one row per cell
+#'
+#' Computes 2D cell centroids as the mean transcript `x`/`y` per `cell`
+#' (and mean `z` when present). Called by default inside
+#' [estimate_cell_adjacency()] before Delaunay triangulation.
+#'
+#' @param df.spatial Data frame of transcripts with at least `cell`, `x`, `y`,
+#'   and a cell-type column named `celltype` or `cell_type`. Optional `z` is
+#'   averaged when present.
+#'
+#' @return A data frame with one row per cell: `cell`, `x`, `y`, `celltype`,
+#'   `cell_type` (same labels; for compatibility with both naming conventions),
+#'   and `z` if it was present in the input.
+#' @export
+cells_from_transcripts <- function(df.spatial) {
+  required.cols <- c('cell', 'x', 'y')
+  if (!all(required.cols %in% colnames(df.spatial))) {
+    stop(paste0('Required columns: ', paste(required.cols, collapse=', ')))
+  }
+  if (!('celltype' %in% colnames(df.spatial)) && !('cell_type' %in% colnames(df.spatial))) {
+    stop("Need a column named 'celltype' or 'cell_type'.")
+  }
+
+  dt <- data.table::as.data.table(df.spatial)
+  if (!('celltype' %in% names(dt))) {
+    dt[, celltype := cell_type]
+  }
+
+  if ('z' %in% names(dt)) {
+    out <- dt[, .(
+      x = mean(x),
+      y = mean(y),
+      z = mean(z),
+      celltype = data.table::first(celltype)
+    ), by = cell]
+  } else {
+    out <- dt[, .(
+      x = mean(x),
+      y = mean(y),
+      celltype = data.table::first(celltype)
+    ), by = cell]
+  }
+  out[, cell := as.character(cell)]
+  out[, cell_type := celltype]
+  as.data.frame(out)
+}
+
+#' Estimate cell–cell adjacency via 2D Delaunay on cell centroids
+#'
+#' Transcripts are first collapsed to one point per cell with
+#' [cells_from_transcripts()] (mean `x`/`y`), then a Delaunay graph is built
+#' and filtered by edge length. Accepts molecule-level or already-collapsed
+#' tables with `celltype` or `cell_type`.
+#'
+#' @param df.spatial Data frame with `cell`, `x`, `y`, and `celltype` or
+#'   `cell_type` (molecule-level or one row per cell).
+#' @param random.shift Uniform jitter added to coordinates before triangulation
+#'   (default `1e-3`).
+#' @param edge.max.mad Keep edges with distance below
+#'   `median(dist) + edge.max.mad * mad(dist)` (default `4`).
+#' @param n.cores Number of cores for tiled triangulation (default `1`).
+#'
+#' @return Data frame of directed cell–cell edges with columns
+#'   `cell_s`, `cell_e`, `cts`, `cte`.
 #' @export
 estimate_cell_adjacency <- function(df.spatial, random.shift=1e-3, edge.max.mad=4, n.cores=1) {
+  # Default: Delaunay on cell centroids (mean transcript coordinates per cell)
+  df.spatial <- cells_from_transcripts(df.spatial)
+
   required.cols <- c('x', 'y', 'cell_type', 'cell')
   if (!all(required.cols %in% colnames(df.spatial))) {
     stop(paste0('Required columns: ', paste(required.cols, collapse=', ')))
@@ -23,7 +90,7 @@ estimate_cell_adjacency <- function(df.spatial, random.shift=1e-3, edge.max.mad=
     edges <- triangles %>% {rbind(.[,c(1, 2)], .[,c(1, 3)], .[,c(2, 3)])} %>%
       {cbind(pmin(.[,1], .[,2]), pmax(.[,1], .[,2]))} %>% unique()
 
-    # Molecule-based edges
+    # Cell-centroid edges
     adj.df <- data.frame(is=edges[,1], ie=edges[,2]) %>% mutate(
       xs=cdf$x[is], xe=cdf$x[ie], ys=cdf$y[is], ye=cdf$y[ie],
       cts=cdf$cell_type[is], cte=cdf$cell_type[ie],
