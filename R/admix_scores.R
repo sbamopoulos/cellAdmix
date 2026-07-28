@@ -69,12 +69,12 @@ estimate_cell_adjacency <- function(df.spatial, random.shift=1e-3, edge.max.mad=
   # Default: Delaunay on cell centroids (mean transcript coordinates per cell)
   df.spatial <- cells_from_transcripts(df.spatial)
 
-  required.cols <- c('x', 'y', 'cell_type', 'cell')
+  required.cols <- c('x', 'y', 'celltype', 'cell')
   if (!all(required.cols %in% colnames(df.spatial))) {
     stop(paste0('Required columns: ', paste(required.cols, collapse=', ')))
   }
 
-  df.spatial %<>% filter(!is.na(cell_type))
+  df.spatial %<>% filter(!is.na(celltype))
 
   df.spatial$x %<>% {. + runif(length(.), -random.shift, random.shift)}
   df.spatial$y %<>% {. + runif(length(.), -random.shift, random.shift)}
@@ -93,7 +93,7 @@ estimate_cell_adjacency <- function(df.spatial, random.shift=1e-3, edge.max.mad=
     # Cell-centroid edges
     adj.df <- data.frame(is=edges[,1], ie=edges[,2]) %>% mutate(
       xs=cdf$x[is], xe=cdf$x[ie], ys=cdf$y[is], ye=cdf$y[ie],
-      cts=cdf$cell_type[is], cte=cdf$cell_type[ie],
+      cts=cdf$celltype[is], cte=cdf$celltype[ie],
       cell_s=cdf$cell[is], cell_e=cdf$cell[ie]
     ) %>% select(-is, -ie)
 
@@ -110,13 +110,17 @@ estimate_cell_adjacency <- function(df.spatial, random.shift=1e-3, edge.max.mad=
     unique()
 
   # Add reverse edges
-  adj.df %<>% select(cell_e, cell_s, cte, cts) %>% set_colnames(colnames(adj.df)) %>% rbind(adj.df) %>% unique()
+  adj.df %<>%
+      select(cell_e, cell_s, cte, cts) %>%
+      rename(cell_s = cell_e, cell_e = cell_s, cts = cte, cte = cts) %>%
+      rbind(adj.df) %>%
+      unique()
 
   return(adj.df)
 }
 
 #' @export
-estimate_cell_type_adjacency <- function(cell.adj.df) {
+estimate_celltype_adjacency <- function(cell.adj.df) {
     adj.mat <- cell.adj.df %>%
         group_by(cell_s, cts, cte) %>% dplyr::count() %>% group_by(cts, cte) %>% dplyr::summarise(n=mean(n)) %>%
         tidyr::pivot_wider(names_from=cts, values_from=n) %>%
@@ -299,14 +303,18 @@ estimate_contamination_scores <- function(
 #'
 #' @inheritDotParams estimate_contamination_scores
 #' @export
-estimate_contamination_scores_seurat <- function(so.rna, so.spatial, cell.type.adj.mat, idents='cell_type', ...) {
+estimate_contamination_scores_seurat <- function(so.rna, so.spatial, cell.type.adj.mat, idents='celltype', assay.rna=NULL, assay.spatial=NULL, ...) {
   if (!is.null(idents)) {
     Seurat::Idents(so.rna) <- idents
     Seurat::Idents(so.spatial) <- idents
   }
 
+  assay.rna <- if (!is.null(assay.rna)) assay.rna else Seurat::DefaultAssay(so.rna)
+  assay.spatial <- if (!is.null(assay.spatial)) assay.spatial else Seurat::DefaultAssay(so.spatial)
+  message("Using assay '", assay.rna, "' for so.rna and '", assay.spatial, "' for so.spatial")
   return(estimate_contamination_scores(
-    cm.rna=so.rna[['RNA']]$counts, cm.spatial=so.spatial[['RNA']]$counts,
+    cm.rna=so.rna[[assay.rna]]$counts,
+    cm.spatial=so.spatial[[assay.spatial]]$counts,
     annot.rna=Idents(so.rna), annot.spatial=Idents(so.spatial),
     cell.type.adj.mat=cell.type.adj.mat, ...
   ))
