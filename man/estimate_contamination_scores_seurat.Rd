@@ -8,7 +8,7 @@ estimate_contamination_scores_seurat(
   so.rna,
   so.spatial,
   cell.type.adj.mat,
-  idents = "cell_type",
+  idents = "celltype",
   ...
 )
 }

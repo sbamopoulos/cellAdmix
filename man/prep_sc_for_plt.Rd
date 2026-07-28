@@ -7,7 +7,7 @@
 prep_sc_for_plt(sc.obj, cell.type.col = NULL)
 }
 \arguments{
-\item{sc.obj}{sc.obj is seurat object with a cell_type meta.data column}
+\item{sc.obj}{sc.obj is seurat object with a celltype meta.data column}
 }
 \value{
 matrix of z-transformed mean expression fractions per cell type

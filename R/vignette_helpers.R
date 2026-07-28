@@ -159,14 +159,14 @@ check_fp <- function(
   ncm_ct_full = knn_mat %*% sparseMatrix(i=1:length(j), j=as.integer(j), x=rep(1, length(j)))
   colnames(ncm_ct_full) = levels(j)
   
-  cell_types <- cell_annot %$% setNames(celltype, rownames(.))
+  celltypes <- cell_annot %$% setNames(celltype, rownames(.))
 
   df$factor <- crf_res[,1]
   factor_counts <- table(df[,c('cell','factor')])
   cf_fracs <- factor_counts / Matrix::rowSums(factor_counts)
   ct_fracs_per_ct <- cf_fracs
 
-  check_res <- check_f_rm(cell_types, bridge_res[[1]], bridge_res[[2]], ct_fracs_per_ct, ncm_ct_full,
+  check_res <- check_f_rm(celltypes, bridge_res[[1]], bridge_res[[2]], ct_fracs_per_ct, ncm_ct_full,
                           do.clean=do_clean, median.thresh=median_thresh
   )
   
