@@ -53,7 +53,7 @@ estimate_cell_adjacency <- function(df.spatial, random.shift=1e-3, edge.max.mad=
 }
 
 #' @export
-estimate_cell_type_adjacency <- function(cell.adj.df) {
+estimate_celltype_adjacency <- function(cell.adj.df) {
     adj.mat <- cell.adj.df %>%
         group_by(cell_s, cts, cte) %>% dplyr::count() %>% group_by(cts, cte) %>% dplyr::summarise(n=mean(n)) %>%
         tidyr::pivot_wider(names_from=cts, values_from=n) %>%

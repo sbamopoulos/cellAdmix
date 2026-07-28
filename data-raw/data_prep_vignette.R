@@ -23,12 +23,12 @@ colnames(cell_meta)[34] <- 'celltype'
 cell_meta$celltype %<>% {ifelse(startsWith(., 'tumor'), 'malignant', .)}
 
 # group all immune cells under one annotation for the visualization
-immune_cell_types <- c(
+immune_celltypes <- c(
   'B-cell', 'NK', 'T CD4 memory', 'T CD4 naive', 'T CD8 memory', 'T CD8 naive', 'Treg', 
   'plasmablast', 'mast', 'mDC', 'monocyte', 'pDC', 'neutrophil'
 )
 
-cell_meta$cell_type_coarse <- cell_meta$celltype %>% {ifelse(. %in% immune_cell_types, 'immune other', .)}
+cell_meta$celltype_coarse <- cell_meta$celltype %>% {ifelse(. %in% immune_celltypes, 'immune other', .)}
 rownames(cell_meta) <- cell_meta$cell
 
 # load the molecule-level spatial data 
@@ -65,7 +65,7 @@ df$z <- (df$z * 800) / 1000
 cells_keep1 <- sample(rownames(cell_meta)[cell_meta$celltype=='fibroblast'],300)
 cells_keep2 <- sample(rownames(cell_meta),200)
 cells_keep <- unique(c(cells_keep1,cells_keep2))
-cell_meta <- cell_meta[cells_keep,c('sdimx','sdimy','cell','celltype','cell_type_coarse','niche')]
+cell_meta <- cell_meta[cells_keep,c('sdimx','sdimy','cell','celltype','celltype_coarse','niche')]
 colnames(cell_meta)[1:2] <- c('x','y')
 df <- df[df$cell %in% cells_keep,c('x','y','z','gene','cell','celltype','mol_id')]
 

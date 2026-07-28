@@ -5,7 +5,7 @@ NULL
 
 #' Get scaled average expression fractions per cell type from scRNA data
 #'
-#' @param sc.obj sc.obj is seurat object with a cell_type meta.data column
+#' @param sc.obj sc.obj is seurat object with a celltype meta.data column
 #'
 #' @return matrix of z-transformed mean expression fractions per cell type
 #' @export
@@ -14,9 +14,6 @@ prep_sc_for_plt <- function(sc.obj, cell.type.col=NULL) {
     if ('celltype' %in% colnames(sc.obj@meta.data)) {
       cell.type.col <- 'celltype'
       cell.types <- sc.obj$celltype
-    } else if ('cell_type' %in% colnames(sc.obj@meta.data)) {
-      cell.type.col <- 'cell_type'
-      cell.types <- sc.obj$cell_type
     } else {
       cell.type.col <- 'Idents'
       cell.types <- Seurat::Idents(sc.obj)
@@ -161,14 +158,10 @@ plot_cell_score_ratios <- function(
     scores.orig, scores.cln, f.rm, df, crf.res,
     upper.lim=1.5, min.mean.thresh=1e-3, add.theme=theme_get()
   ) {
-  if (!('cell_type' %in% colnames(df))) {
-    if ('celltype' %in% colnames(df)) {
-      df$cell_type <- df$celltype
-    } else {
-      stop('Need a column in df called cell_type or celltype.')
-    }
+  if (!('celltype' %in% colnames(df))) {
+    stop('Need a column in df called celltype.')
   }
-  all.ct <- unique(scores.orig$cell_type)
+  all.ct <- unique(scores.orig$celltype)
 
   f.ct <- sapply(f.rm, \(x) {
     tmp <- strsplit(x, split='_')[[1]]
@@ -187,7 +180,7 @@ plot_cell_score_ratios <- function(
     f.ord <- as.numeric(f.f[ndx])
     f.ord <- as.character(f.ord[order(f.ord)])
 
-    df.sub <- df[df$cell_type == ct, ]
+    df.sub <- df[df$celltype == ct, ]
     f.ord <- intersect(f.ord, df.sub$factor)
     if (length(f.ord) == 0) {
       next
@@ -196,8 +189,8 @@ plot_cell_score_ratios <- function(
     cell.ndx.test <- which(rowSums(t2[, f.ord, drop=FALSE]) > 0)
     cells.w.f.rm <- rownames(t2)[cell.ndx.test]
 
-    scores.orig.ct <- scores.orig[scores.orig$cell_type == ct, ]
-    scores.cln.ct <- scores.cln[scores.cln$cell_type == ct, ]
+    scores.orig.ct <- scores.orig[scores.orig$celltype == ct, ]
+    scores.cln.ct <- scores.cln[scores.cln$celltype == ct, ]
     cells.both <- intersect(scores.orig.ct$cell, scores.cln.ct$cell)
     scores.orig.ct <- scores.orig.ct[scores.orig.ct$cell %in% cells.both, ]
     scores.cln.ct <- scores.cln.ct[scores.cln.ct$cell %in% cells.both, ]
@@ -213,7 +206,7 @@ plot_cell_score_ratios <- function(
                                        scores.cln.ct$scores,
                                        scores.cln.ct$scores/scores.orig.ct$scores))
     colnames(tmp) <- c('orig', 'clean', 'scores')
-    tmp$cell_type <- ct
+    tmp$celltype <- ct
     tmp$cell <- scores.cln.ct$cell
     tmp$frac.cleaned <- frac.cleaned
 
@@ -234,8 +227,8 @@ plot_cell_score_ratios <- function(
   scores.ratios.all.ct$scores[scores.ratios.all.ct$scores > upper.lim] <- upper.lim
   scale.fun <- \(x) {sprintf("%.2f", x)}
 
-  tmp1 <- scores.ratios.all.ct[, c('orig', 'cell_type')]
-  tmp2 <- scores.ratios.all.ct[, c('clean', 'cell_type')]
+  tmp1 <- scores.ratios.all.ct[, c('orig', 'celltype')]
+  tmp2 <- scores.ratios.all.ct[, c('clean', 'celltype')]
   tmp1$cln_status <- 'unclean'
   tmp2$cln_status <- 'clean'
   colnames(tmp1)[1] <- 'scores'
@@ -243,11 +236,11 @@ plot_cell_score_ratios <- function(
   tmp <- rbind.data.frame(tmp1, tmp2)
 
   msc <- tmp1 %>%
-    group_by(cell_type) %>%
+    group_by(celltype) %>%
     summarise(mean_score=mean(scores, trim=.1))
 
-  ct.ord <- msc$cell_type[order(msc$mean_score, decreasing=FALSE)]
-  tmp$cell_type <- factor(tmp$cell_type, levels=ct.ord)
+  ct.ord <- msc$celltype[order(msc$mean_score, decreasing=FALSE)]
+  tmp$celltype <- factor(tmp$celltype, levels=ct.ord)
 
   p.theme <- theme(
     axis.text.y=element_text(size=7),
@@ -267,9 +260,9 @@ plot_cell_score_ratios <- function(
     panel.border=element_blank()
   )
 
-  p1 <- ggplot(tmp, aes(y=cell_type, x=scores, fill=cln_status)) +
+  p1 <- ggplot(tmp, aes(y=celltype, x=scores, fill=cln_status)) +
     geom_boxplot(outliers=FALSE, size=.3) +
-    geom_hline(yintercept=0:length(unique(tmp$cell_type)) + .5, color='gray90') +
+    geom_hline(yintercept=0:length(unique(tmp$celltype)) + .5, color='gray90') +
     ggtitle(paste0('Admixture scores')) +
     xlab('P_admix') +
     ylab('Cell type') +
@@ -278,9 +271,9 @@ plot_cell_score_ratios <- function(
     add.theme +
     p.theme
 
-  scores.ratios.all.ct$cell_type <- factor(scores.ratios.all.ct$cell_type, levels=ct.ord)
-  p2 <- ggplot(scores.ratios.all.ct, aes(x=scores, y=cell_type, fill=factor(after_stat(quantile), levels=c('4', '3', '2', '1')))) +
-    geom_hline(yintercept=0:length(unique(scores.ratios.all.ct$cell_type)) + .5, color='gray90') +
+  scores.ratios.all.ct$celltype <- factor(scores.ratios.all.ct$celltype, levels=ct.ord)
+  p2 <- ggplot(scores.ratios.all.ct, aes(x=scores, y=celltype, fill=factor(after_stat(quantile), levels=c('4', '3', '2', '1')))) +
+    geom_hline(yintercept=0:length(unique(scores.ratios.all.ct$celltype)) + .5, color='gray90') +
     ggridges::stat_density_ridges(
       scale=1.25, linewidth=.3, geom="density_ridges_gradient",
       calc_ecdf=TRUE, quantiles=4, quantile_lines=TRUE
@@ -305,13 +298,13 @@ plot_cell_score_ratios <- function(
       legend.key.width=unit(.3, 'cm'),
     )
 
-  f.c.unq <- unique(scores.ratios.all.ct[, c('cell_type', 'frac.cleaned')])
-  f.c.unq$cell_type <- factor(f.c.unq$cell_type, levels=ct.ord)
+  f.c.unq <- unique(scores.ratios.all.ct[, c('celltype', 'frac.cleaned')])
+  f.c.unq$celltype <- factor(f.c.unq$celltype, levels=ct.ord)
   f.c.unq$frac.cleaned <- f.c.unq$frac.cleaned * 100
 
-  p3 <- ggplot(f.c.unq, aes(y=cell_type, x=frac.cleaned)) +
+  p3 <- ggplot(f.c.unq, aes(y=celltype, x=frac.cleaned)) +
     geom_bar(stat='identity', fill='darkred', alpha=.8, width=.7) +
-    geom_hline(yintercept=0:length(unique(f.c.unq$cell_type)) + .5, color='gray90') +
+    geom_hline(yintercept=0:length(unique(f.c.unq$celltype)) + .5, color='gray90') +
     scale_x_continuous(labels=scale.fun, breaks=pretty_breaks(n=4)) +
     ggtitle('\nPercent cells modified') +
     xlab('%') +
@@ -323,8 +316,8 @@ plot_cell_score_ratios <- function(
       axis.text.x=element_text(size=6)
     )
 
-  tmp1 <- scores.ratios.all.ct[, c('mol.counts', 'cell_type')]
-  tmp2 <- scores.ratios.all.ct[, c('mol.counts.after', 'cell_type')]
+  tmp1 <- scores.ratios.all.ct[, c('mol.counts', 'celltype')]
+  tmp2 <- scores.ratios.all.ct[, c('mol.counts.after', 'celltype')]
   tmp1$mol_type <- 'unclean'
   tmp2$mol_type <- 'clean'
   colnames(tmp1)[1] <- 'counts'
@@ -332,9 +325,9 @@ plot_cell_score_ratios <- function(
   tmp <- rbind.data.frame(tmp1, tmp2)
 
   tmp$mol_type <- factor(tmp$mol_type, levels=c('clean', 'unclean'))
-  p4 <- ggplot(tmp, aes(y=cell_type, x=counts, fill=mol_type)) +
+  p4 <- ggplot(tmp, aes(y=celltype, x=counts, fill=mol_type)) +
     geom_boxplot(outliers=FALSE, size=.3) +
-    geom_hline(yintercept=0:length(unique(tmp$cell_type)) + .5, color='gray90') +
+    geom_hline(yintercept=0:length(unique(tmp$celltype)) + .5, color='gray90') +
     ggtitle('Molecule counts in modified cells') +
     xlab('Number of molecules per cell') +
     scale_x_continuous(labels=scale.fun, breaks=pretty_breaks(n=3)) +
