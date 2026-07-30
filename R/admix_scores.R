@@ -28,15 +28,17 @@ cells_from_transcripts <- function(df.spatial) {
     dt[, celltype := cell_type]
   }
 
+  # Use list() not .(): NAMESPACE does not import data.table, so .() is
+  # unresolved inside the package and fails with "could not find function '.'".
   if ('z' %in% names(dt)) {
-    out <- dt[, .(
+    out <- dt[, list(
       x = mean(x),
       y = mean(y),
       z = mean(z),
       celltype = data.table::first(celltype)
     ), by = cell]
   } else {
-    out <- dt[, .(
+    out <- dt[, list(
       x = mean(x),
       y = mean(y),
       celltype = data.table::first(celltype)
