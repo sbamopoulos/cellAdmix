@@ -19,5 +19,5 @@ and \code{z} if it was present in the input.
 \description{
 Computes 2D cell centroids as the mean transcript \code{x}/\code{y} per \code{cell}
 (and mean \code{z} when present). Called by default inside
-\code{\link{estimate_cell_adjacency}} before Delaunay triangulation.
+\code{\link[=estimate_cell_adjacency]{estimate_cell_adjacency()}} before Delaunay triangulation.
 }
