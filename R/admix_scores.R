@@ -13,6 +13,7 @@
 #' @return A data frame with one row per cell: `cell`, `x`, `y`, `celltype`,
 #'   `cell_type` (same labels; for compatibility with both naming conventions),
 #'   and `z` if it was present in the input.
+#' @import data.table
 #' @export
 cells_from_transcripts <- function(df.spatial) {
   required.cols <- c('cell', 'x', 'y')
